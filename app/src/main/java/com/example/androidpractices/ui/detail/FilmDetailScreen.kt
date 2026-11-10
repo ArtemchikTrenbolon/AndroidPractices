@@ -1,0 +1,282 @@
+package com.example.androidpractices.ui.detail
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.androidpractices.data.MockFilms
+import com.example.androidpractices.model.Film
+import com.example.androidpractices.ui.common.PosterPlaceholder
+import com.example.androidpractices.ui.theme.AndroidPracticesTheme
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilmDetailScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: FilmDetailViewModel = viewModel(),
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = state.film?.title.orEmpty(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+                    }
+                },
+            )
+        },
+    ) { innerPadding ->
+        val film = state.film
+        when {
+            state.isLoading -> CenteredBox(Modifier.padding(innerPadding)) {
+                CircularProgressIndicator()
+            }
+            film == null -> CenteredBox(Modifier.padding(innerPadding)) {
+                Text("Фильм не найден")
+            }
+            else -> FilmDetailContent(film = film, modifier = Modifier.padding(innerPadding))
+        }
+    }
+}
+
+@Composable
+private fun CenteredBox(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        content()
+    }
+}
+
+/**
+ * Сложная разметка на ConstraintLayout: постер слева, заголовки справа от него,
+ * ниже строка с цифрами, таблица «подпись — значение» и описание.
+ */
+@Composable
+private fun FilmDetailContent(film: Film, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+    ) {
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        ) {
+            val (poster, title, original, romanised, rating, stats) = createRefs()
+            val (labelDirector, valueDirector, labelProducer, valueProducer) = createRefs()
+            val (divider, descTitle, description) = createRefs()
+
+            // Нижняя граница блока «постер + заголовки»
+            val headerBottom = createBottomBarrier(poster, rating, margin = 24.dp)
+
+            PosterPlaceholder(
+                film = film,
+                modifier = Modifier
+                    .size(width = 140.dp, height = 200.dp)
+                    .constrainAs(poster) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                    },
+            )
+
+            Text(
+                text = film.title,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.constrainAs(title) {
+                    top.linkTo(poster.top)
+                    start.linkTo(poster.end, margin = 16.dp)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                },
+            )
+            Text(
+                text = film.originalTitle,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.constrainAs(original) {
+                    top.linkTo(title.bottom, margin = 8.dp)
+                    start.linkTo(title.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                },
+            )
+            Text(
+                text = film.originalTitleRomanised,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.constrainAs(romanised) {
+                    top.linkTo(original.bottom, margin = 2.dp)
+                    start.linkTo(title.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                },
+            )
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.constrainAs(rating) {
+                    top.linkTo(romanised.bottom, margin = 12.dp)
+                    start.linkTo(title.start)
+                },
+            ) {
+                Text(
+                    text = "★ ${film.rtScore} / 100",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                )
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(40.dp),
+                modifier = Modifier.constrainAs(stats) {
+                    top.linkTo(headerBottom)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                },
+            ) {
+                StatItem(label = "Год выхода", value = film.releaseYear.toString())
+                StatItem(label = "Длительность", value = "${film.runningTimeMinutes} мин")
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.constrainAs(divider) {
+                    top.linkTo(stats.bottom, margin = 20.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                },
+            )
+
+            // Таблица «подпись — значение»: значения выровнены по правой границе самой длинной подписи
+            val labelsEnd = createEndBarrier(labelDirector, labelProducer, margin = 16.dp)
+            val directorRowBottom = createBottomBarrier(labelDirector, valueDirector, margin = 12.dp)
+
+            Text(
+                text = "Режиссёр",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.constrainAs(labelDirector) {
+                    top.linkTo(divider.bottom, margin = 20.dp)
+                    start.linkTo(parent.start)
+                },
+            )
+            Text(
+                text = film.director,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.constrainAs(valueDirector) {
+                    top.linkTo(labelDirector.top)
+                    start.linkTo(labelsEnd)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                },
+            )
+            Text(
+                text = "Продюсер",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.constrainAs(labelProducer) {
+                    top.linkTo(directorRowBottom)
+                    start.linkTo(parent.start)
+                },
+            )
+            Text(
+                text = film.producer,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.constrainAs(valueProducer) {
+                    top.linkTo(labelProducer.top)
+                    start.linkTo(labelsEnd)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                },
+            )
+
+            val producerRowBottom = createBottomBarrier(labelProducer, valueProducer, margin = 24.dp)
+            Text(
+                text = "Описание",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.constrainAs(descTitle) {
+                    top.linkTo(producerRowBottom)
+                    start.linkTo(parent.start)
+                },
+            )
+            Text(
+                text = film.description,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.constrainAs(description) {
+                    top.linkTo(descTitle.bottom, margin = 8.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatItem(label: String, value: String) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun FilmDetailContentPreview() {
+    AndroidPracticesTheme {
+        FilmDetailContent(film = MockFilms.films.first())
+    }
+}
