@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,43 +28,56 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.androidpractices.data.MockFilms
-import com.example.androidpractices.model.Film
-import com.example.androidpractices.ui.common.PosterPlaceholder
+import com.example.androidpractices.domain.model.Film
+import com.example.androidpractices.ui.common.ErrorContent
+import com.example.androidpractices.ui.common.FilmPoster
+import com.example.androidpractices.ui.common.LoadingContent
+import com.example.androidpractices.ui.preview.SampleFilms
 import com.example.androidpractices.ui.theme.AndroidPracticesTheme
+
+/** Варианты query-параметра limit: (значение для сервера, подпись). */
+private val limitOptions = listOf(5 to "5", 10 to "10", 50 to "Все")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilmsScreen(
     onFilmClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FilmsViewModel = viewModel(),
+    viewModel: FilmsViewModel = viewModel(factory = FilmsViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val limit by viewModel.limit.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
         topBar = { TopAppBar(title = { Text("Фильмы Studio Ghibli") }) },
     ) { innerPadding ->
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(state.films, key = { it.id }) { film ->
-                    FilmCard(film = film, onClick = { onFilmClick(film.id) })
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            LimitSelector(selected = limit, onSelected = viewModel::onLimitSelected)
+
+            Box(modifier = Modifier.weight(1f)) {
+                when (val current = state) {
+                    FilmsUiState.Loading -> LoadingContent()
+                    is FilmsUiState.Error -> ErrorContent(
+                        message = current.message,
+                        onRetry = viewModel::retry,
+                    )
+                    is FilmsUiState.Success -> if (current.films.isEmpty()) {
+                        Text(
+                            text = "Ничего не найдено",
+                            modifier = Modifier.align(Alignment.Center),
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(current.films, key = { it.id }) { film ->
+                                FilmCard(film = film, onClick = { onFilmClick(film.id) })
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -72,16 +85,35 @@ fun FilmsScreen(
 }
 
 @Composable
+private fun LimitSelector(selected: Int, onSelected: (Int) -> Unit) {
+    Row(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("Показать:", style = MaterialTheme.typography.bodyMedium)
+        limitOptions.forEach { (value, label) ->
+            FilterChip(
+                selected = value == selected,
+                onClick = { onSelected(value) },
+                label = { Text(label) },
+            )
+        }
+    }
+}
+
+@Composable
 private fun FilmCard(film: Film, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Card(modifier = modifier
-        .fillMaxWidth()
-        .clickable(onClick = onClick)
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            PosterPlaceholder(film = film, modifier = Modifier.size(width = 80.dp, height = 112.dp))
+            FilmPoster(film = film, modifier = Modifier.size(width = 80.dp, height = 112.dp))
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -117,6 +149,6 @@ private fun FilmCard(film: Film, onClick: () -> Unit, modifier: Modifier = Modif
 @Composable
 private fun FilmCardPreview() {
     AndroidPracticesTheme {
-        FilmCard(film = MockFilms.films.first(), onClick = {})
+        FilmCard(film = SampleFilms.castleInTheSky, onClick = {})
     }
 }

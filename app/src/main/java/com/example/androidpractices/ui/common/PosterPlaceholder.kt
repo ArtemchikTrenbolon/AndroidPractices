@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.androidpractices.model.Film
+import com.example.androidpractices.domain.model.Film
 
 private val posterPalettes = listOf(
     listOf(Color(0xFF3949AB), Color(0xFF9FA8DA)),

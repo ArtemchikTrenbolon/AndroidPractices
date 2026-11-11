@@ -1,7 +1,6 @@
 package com.example.androidpractices.ui.detail
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -25,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,9 +32,11 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.androidpractices.data.MockFilms
-import com.example.androidpractices.model.Film
-import com.example.androidpractices.ui.common.PosterPlaceholder
+import com.example.androidpractices.domain.model.Film
+import com.example.androidpractices.ui.common.ErrorContent
+import com.example.androidpractices.ui.common.FilmPoster
+import com.example.androidpractices.ui.common.LoadingContent
+import com.example.androidpractices.ui.preview.SampleFilms
 import com.example.androidpractices.ui.theme.AndroidPracticesTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,7 +44,7 @@ import com.example.androidpractices.ui.theme.AndroidPracticesTheme
 fun FilmDetailScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FilmDetailViewModel = viewModel(),
+    viewModel: FilmDetailViewModel = viewModel(factory = FilmDetailViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -55,7 +54,7 @@ fun FilmDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = state.film?.title.orEmpty(),
+                        text = (state as? FilmDetailUiState.Success)?.film?.title.orEmpty(),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -68,23 +67,18 @@ fun FilmDetailScreen(
             )
         },
     ) { innerPadding ->
-        val film = state.film
-        when {
-            state.isLoading -> CenteredBox(Modifier.padding(innerPadding)) {
-                CircularProgressIndicator()
-            }
-            film == null -> CenteredBox(Modifier.padding(innerPadding)) {
-                Text("Фильм не найден")
-            }
-            else -> FilmDetailContent(film = film, modifier = Modifier.padding(innerPadding))
+        when (val current = state) {
+            FilmDetailUiState.Loading -> LoadingContent(Modifier.padding(innerPadding))
+            is FilmDetailUiState.Error -> ErrorContent(
+                message = current.message,
+                onRetry = viewModel::retry,
+                modifier = Modifier.padding(innerPadding),
+            )
+            is FilmDetailUiState.Success -> FilmDetailContent(
+                film = current.film,
+                modifier = Modifier.padding(innerPadding),
+            )
         }
-    }
-}
-
-@Composable
-private fun CenteredBox(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        content()
     }
 }
 
@@ -111,7 +105,7 @@ private fun FilmDetailContent(film: Film, modifier: Modifier = Modifier) {
             // Нижняя граница блока «постер + заголовки»
             val headerBottom = createBottomBarrier(poster, rating, margin = 24.dp)
 
-            PosterPlaceholder(
+            FilmPoster(
                 film = film,
                 modifier = Modifier
                     .size(width = 140.dp, height = 200.dp)
@@ -277,6 +271,6 @@ private fun StatItem(label: String, value: String) {
 @Composable
 private fun FilmDetailContentPreview() {
     AndroidPracticesTheme {
-        FilmDetailContent(film = MockFilms.films.first())
+        FilmDetailContent(film = SampleFilms.castleInTheSky)
     }
 }
