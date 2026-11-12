@@ -4,6 +4,7 @@ object Routes {
     const val FILMS = "films"
     const val FAVORITES = "favorites"
     const val PROFILE = "profile"
+    const val SETTINGS = "settings"
 
     const val ARG_FILM_ID = "filmId"
     const val FILM_DETAIL = "film/{$ARG_FILM_ID}"

@@ -20,6 +20,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.androidpractices.ui.common.PlaceholderScreen
+import com.example.androidpractices.ui.favorites.FavoritesScreen
+import com.example.androidpractices.ui.settings.FilterSettingsScreen
 import com.example.androidpractices.ui.detail.FilmDetailScreen
 import com.example.androidpractices.ui.films.FilmsScreen
 import com.example.androidpractices.ui.navigation.BottomTab
@@ -72,17 +74,31 @@ fun MainScreen() {
                     onFilmClick = { filmId ->
                         navController.navigate(Routes.filmDetail(filmId))
                     },
+                    onOpenFilters = { navController.navigate(Routes.SETTINGS) },
                 )
             }
-            composable(Routes.FAVORITES) { PlaceholderScreen(title = "Избранное") }
+            composable(Routes.FAVORITES) {
+                FavoritesScreen(
+                    onFilmClick = { filmId ->
+                        navController.navigate(Routes.filmDetail(filmId))
+                    },
+                )
+            }
+            composable(Routes.SETTINGS) {
+                FilterSettingsScreen(onDone = { navController.popBackStack() })
+            }
             composable(Routes.PROFILE) { PlaceholderScreen(title = "Профиль") }
             composable(
                 route = Routes.FILM_DETAIL,
                 arguments = listOf(
                     navArgument(Routes.ARG_FILM_ID) { type = NavType.StringType },
                 ),
-            ) {
-                FilmDetailScreen(onBack = { navController.popBackStack() })
+            ) { backStackEntry ->
+                val filmId = checkNotNull(backStackEntry.arguments?.getString(Routes.ARG_FILM_ID))
+                FilmDetailScreen(
+                    filmId = filmId,
+                    onBack = { navController.popBackStack() },
+                )
             }
         }
     }

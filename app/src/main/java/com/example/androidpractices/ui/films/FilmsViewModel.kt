@@ -1,18 +1,18 @@
 package com.example.androidpractices.ui.films
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.androidpractices.di.AppContainer
+import com.example.androidpractices.domain.cache.FilterBadgeCache
 import com.example.androidpractices.domain.model.Film
+import com.example.androidpractices.domain.repository.FilterRepository
 import com.example.androidpractices.domain.usecase.GetFilmsUseCase
 import com.example.androidpractices.ui.common.toUserMessage
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed interface FilmsUiState {
@@ -23,45 +23,35 @@ sealed interface FilmsUiState {
 
 class FilmsViewModel(
     private val getFilmsUseCase: GetFilmsUseCase,
+    filterRepository: FilterRepository,
+    badgeCache: FilterBadgeCache,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<FilmsUiState>(FilmsUiState.Loading)
     val uiState: StateFlow<FilmsUiState> = _uiState.asStateFlow()
 
-    /** Сколько фильмов просим у сервера (query-параметр limit). */
-    private val _limit = MutableStateFlow(DEFAULT_LIMIT)
-    val limit: StateFlow<Int> = _limit.asStateFlow()
+    /** Нужно ли показывать бейдж на кнопке фильтров (общий кэш со экраном настроек). */
+    val isFilterActive: StateFlow<Boolean> = badgeCache.isActive
 
-    private var loadJob: Job? = null
+    private val reloadTrigger = MutableStateFlow(0)
 
     init {
-        load()
-    }
-
-    fun onLimitSelected(newLimit: Int) {
-        if (newLimit == _limit.value && _uiState.value is FilmsUiState.Success) return
-        _limit.value = newLimit
-        load()
-    }
-
-    fun retry() = load()
-
-    private fun load() {
-        loadJob?.cancel() // если пользователь быстро меняет limit, старый запрос отменяем
-        loadJob = viewModelScope.launch {
-            _uiState.value = FilmsUiState.Loading
-            getFilmsUseCase(_limit.value).fold(
-                onSuccess = { _uiState.value = FilmsUiState.Success(it) },
-                onFailure = { _uiState.value = FilmsUiState.Error(it.toUserMessage()) },
-            )
+        viewModelScope.launch {
+            // Список перезагружается при каждом изменении сохранённых настроек и по кнопке «Повторить».
+            // collectLatest отменяет устаревший запрос, если настройки сменились раньше ответа.
+            combine(filterRepository.filter, reloadTrigger) { filter, _ -> filter }
+                .collectLatest { filter ->
+                    badgeCache.setActive(!filter.isDefault)
+                    _uiState.value = FilmsUiState.Loading
+                    getFilmsUseCase(filter).fold(
+                        onSuccess = { _uiState.value = FilmsUiState.Success(it) },
+                        onFailure = { _uiState.value = FilmsUiState.Error(it.toUserMessage()) },
+                    )
+                }
         }
     }
 
-    companion object {
-        const val DEFAULT_LIMIT = 10
-
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer { FilmsViewModel(AppContainer.getFilmsUseCase) }
-        }
+    fun retry() {
+        reloadTrigger.update { it + 1 }
     }
 }

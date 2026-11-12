@@ -1,20 +1,17 @@
 package com.example.androidpractices.ui.detail
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.androidpractices.di.AppContainer
 import com.example.androidpractices.domain.model.Film
+import com.example.androidpractices.domain.repository.FavoritesRepository
 import com.example.androidpractices.domain.usecase.GetFilmUseCase
+import com.example.androidpractices.domain.usecase.ToggleFavoriteUseCase
 import com.example.androidpractices.ui.common.toUserMessage
-import com.example.androidpractices.ui.navigation.Routes
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed interface FilmDetailUiState {
@@ -23,22 +20,30 @@ sealed interface FilmDetailUiState {
     data class Error(val message: String) : FilmDetailUiState
 }
 
-/** id фильма (path-параметр запроса) приходит из аргумента навигации через SavedStateHandle. */
+/** id фильма (path-параметр запроса) передаёт Koin через parametersOf. */
 class FilmDetailViewModel(
-    savedStateHandle: SavedStateHandle,
+    private val filmId: String,
     private val getFilmUseCase: GetFilmUseCase,
+    favoritesRepository: FavoritesRepository,
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
 ) : ViewModel() {
-
-    private val filmId: String = checkNotNull(savedStateHandle.get<String>(Routes.ARG_FILM_ID))
 
     private val _uiState = MutableStateFlow<FilmDetailUiState>(FilmDetailUiState.Loading)
     val uiState: StateFlow<FilmDetailUiState> = _uiState.asStateFlow()
+
+    val isFavorite: StateFlow<Boolean> = favoritesRepository.observeIsFavorite(filmId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     init {
         load()
     }
 
     fun retry() = load()
+
+    fun toggleFavorite() {
+        val film = (_uiState.value as? FilmDetailUiState.Success)?.film ?: return
+        viewModelScope.launch { toggleFavoriteUseCase(film) }
+    }
 
     private fun load() {
         viewModelScope.launch {
@@ -47,17 +52,6 @@ class FilmDetailViewModel(
                 onSuccess = { _uiState.value = FilmDetailUiState.Success(it) },
                 onFailure = { _uiState.value = FilmDetailUiState.Error(it.toUserMessage()) },
             )
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                FilmDetailViewModel(
-                    savedStateHandle = createSavedStateHandle(),
-                    getFilmUseCase = AppContainer.getFilmUseCase,
-                )
-            }
         }
     }
 }

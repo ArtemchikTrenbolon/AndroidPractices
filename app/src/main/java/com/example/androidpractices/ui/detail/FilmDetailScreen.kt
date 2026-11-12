@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -24,6 +25,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,7 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import com.example.androidpractices.domain.model.Film
 import com.example.androidpractices.ui.common.ErrorContent
 import com.example.androidpractices.ui.common.FilmPoster
@@ -42,11 +45,13 @@ import com.example.androidpractices.ui.theme.AndroidPracticesTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilmDetailScreen(
+    filmId: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FilmDetailViewModel = viewModel(factory = FilmDetailViewModel.Factory),
+    viewModel: FilmDetailViewModel = koinViewModel(parameters = { parametersOf(filmId) }),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
@@ -62,6 +67,17 @@ fun FilmDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+                    }
+                },
+                actions = {
+                    if (state is FilmDetailUiState.Success) {
+                        IconButton(onClick = viewModel::toggleFavorite) {
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = if (isFavorite) "Убрать из избранного" else "В избранное",
+                                tint = if (isFavorite) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 },
             )
