@@ -6,6 +6,7 @@ import com.example.androidpractices.domain.model.AppException
 fun Throwable.toUserMessage(): String = when (this) {
     is AppException.NoInternet -> "Нет подключения к интернету. Проверьте сеть и попробуйте снова."
     is AppException.Server -> "Ошибка сервера (код $code). Попробуйте позже."
-    is AppException.NotFound -> "Фильм не найден."
+    is AppException.NotFound -> "Не найдено."
+    is AppException.InvalidUrl -> "Некорректная ссылка. Она должна начинаться с https://"
     else -> "Что-то пошло не так. Попробуйте ещё раз."
 }

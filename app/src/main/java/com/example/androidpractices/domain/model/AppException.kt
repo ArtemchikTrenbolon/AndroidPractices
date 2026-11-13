@@ -11,5 +11,8 @@ sealed class AppException(cause: Throwable? = null) : Exception(cause) {
     /** Запрошенного ресурса нет (404). */
     class NotFound : AppException()
 
+    /** Ссылка пустая или не является корректным http(s)-адресом. */
+    class InvalidUrl : AppException()
+
     class Unknown(cause: Throwable? = null) : AppException(cause)
 }

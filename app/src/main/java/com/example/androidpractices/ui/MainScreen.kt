@@ -19,13 +19,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.androidpractices.ui.common.PlaceholderScreen
 import com.example.androidpractices.ui.favorites.FavoritesScreen
 import com.example.androidpractices.ui.settings.FilterSettingsScreen
 import com.example.androidpractices.ui.detail.FilmDetailScreen
 import com.example.androidpractices.ui.films.FilmsScreen
 import com.example.androidpractices.ui.navigation.BottomTab
 import com.example.androidpractices.ui.navigation.Routes
+import com.example.androidpractices.ui.profile.EditProfileScreen
+import com.example.androidpractices.ui.profile.ProfileScreen
 
 @Composable
 fun MainScreen() {
@@ -87,7 +88,12 @@ fun MainScreen() {
             composable(Routes.SETTINGS) {
                 FilterSettingsScreen(onDone = { navController.popBackStack() })
             }
-            composable(Routes.PROFILE) { PlaceholderScreen(title = "Профиль") }
+            composable(Routes.PROFILE) {
+                ProfileScreen(onEdit = { navController.navigate(Routes.PROFILE_EDIT) })
+            }
+            composable(Routes.PROFILE_EDIT) {
+                EditProfileScreen(onDone = { navController.popBackStack() })
+            }
             composable(
                 route = Routes.FILM_DETAIL,
                 arguments = listOf(
