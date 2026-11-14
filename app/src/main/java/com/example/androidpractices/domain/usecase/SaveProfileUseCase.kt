@@ -9,6 +9,7 @@ class SaveProfileUseCase(private val repository: ProfileRepository) {
             fullName = profile.fullName.trim(),
             position = profile.position.trim(),
             resumeUrl = profile.resumeUrl.trim(),
+            classTime = profile.classTime.trim(),
         )
     )
 }

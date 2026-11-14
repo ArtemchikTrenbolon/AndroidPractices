@@ -6,6 +6,7 @@ import androidx.room.Room
 import com.example.androidpractices.data.local.AppDatabase
 import com.example.androidpractices.data.local.filterDataStore
 import com.example.androidpractices.data.local.profileDataStore
+import com.example.androidpractices.data.reminder.AlarmReminderScheduler
 import com.example.androidpractices.data.remote.FilmsApi
 import com.example.androidpractices.data.repository.FavoritesRepositoryImpl
 import com.example.androidpractices.data.repository.FilmRepositoryImpl
@@ -19,12 +20,14 @@ import com.example.androidpractices.domain.repository.FilmRepository
 import com.example.androidpractices.domain.repository.AvatarStorage
 import com.example.androidpractices.domain.repository.FilterRepository
 import com.example.androidpractices.domain.repository.ProfileRepository
+import com.example.androidpractices.domain.repository.ReminderScheduler
 import com.example.androidpractices.domain.repository.ResumeDownloader
 import com.example.androidpractices.domain.usecase.DownloadResumeUseCase
 import com.example.androidpractices.domain.usecase.GetFilmUseCase
 import com.example.androidpractices.domain.usecase.GetFilmsUseCase
 import com.example.androidpractices.domain.usecase.SaveAvatarUseCase
 import com.example.androidpractices.domain.usecase.SaveProfileUseCase
+import com.example.androidpractices.domain.usecase.ScheduleClassReminderUseCase
 import com.example.androidpractices.domain.usecase.ToggleFavoriteUseCase
 import com.example.androidpractices.ui.detail.FilmDetailViewModel
 import com.example.androidpractices.ui.favorites.FavoritesViewModel
@@ -79,6 +82,7 @@ val appModule = module {
     single<ProfileRepository> { ProfileRepositoryImpl(get(named("profile"))) }
     single<AvatarStorage> { AvatarStorageImpl(androidContext()) }
     single<ResumeDownloader> { ResumeDownloaderImpl(androidContext(), get()) }
+    single<ReminderScheduler> { AlarmReminderScheduler(androidContext()) }
 
     // Общий кэш бейджа: один экземпляр для списка и настроек
     single { FilterBadgeCache() }
@@ -90,12 +94,13 @@ val appModule = module {
     factory { SaveProfileUseCase(get()) }
     factory { SaveAvatarUseCase(get()) }
     factory { DownloadResumeUseCase(get()) }
+    factory { ScheduleClassReminderUseCase(get()) }
 
     // ViewModel
     viewModel { FilmsViewModel(get(), get(), get()) }
     viewModel { FilterSettingsViewModel(get(), get()) }
     viewModel { FavoritesViewModel(get()) }
     viewModel { ProfileViewModel(get(), get()) }
-    viewModel { EditProfileViewModel(get(), get(), get()) }
+    viewModel { EditProfileViewModel(get(), get(), get(), get()) }
     viewModel { params -> FilmDetailViewModel(params.get(), get(), get(), get()) }
 }

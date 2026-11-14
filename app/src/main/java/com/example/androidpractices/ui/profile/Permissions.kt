@@ -29,3 +29,8 @@ fun Context.hasStorageAccess(): Boolean =
 
 fun Context.hasCameraAccess(): Boolean =
     ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+
+/** До Android 13 разрешение на уведомления не требуется. */
+fun Context.hasNotificationAccess(): Boolean =
+    Build.VERSION.SDK_INT < 33 ||
+        ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED

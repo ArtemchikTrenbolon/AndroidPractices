@@ -88,6 +88,12 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                if (current.classTime.isNotBlank()) {
+                    Text(
+                        text = "Любимая пара: ${current.classTime}",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
                 Button(
                     onClick = viewModel::onResumeClick,
                     enabled = current.resumeUrl.isNotBlank() && !isDownloading,

@@ -1,6 +1,7 @@
 package com.example.androidpractices.ui.profile
 
 import android.Manifest
+import android.app.TimePickerDialog
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -41,13 +42,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.androidpractices.domain.model.ClassTime
 import com.example.androidpractices.ui.common.LoadingContent
 import org.koin.androidx.compose.koinViewModel
 
 /**
  * Разрешения:
  * - при входе на экран запрашиваем доступ к фото; если пользователь отказал, закрываем экран;
- * - доступ к камере запрашиваем в момент выбора «Камера».
+ * - доступ к камере запрашиваем в момент выбора «Камера»;
+ * - разрешение на уведомления (Android 13+) запрашиваем при нажатии «Готово».
  * Галерея открывается через системный Photo Picker, снимок делает системное приложение камеры (TakePicture + FileProvider).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,6 +61,7 @@ fun EditProfileScreen(
     viewModel: EditProfileViewModel = koinViewModel(),
 ) {
     val draft by viewModel.draft.collectAsStateWithLifecycle()
+    val classTimeTouched by viewModel.classTimeTouched.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showSourceDialog by rememberSaveable { mutableStateOf(false) }
     // Адрес снимка нужно пережить пересоздание Activity, пока открыта камера
@@ -106,6 +110,23 @@ fun EditProfileScreen(
         } else {
             Toast.makeText(context, "Для съёмки нужен доступ к камере", Toast.LENGTH_LONG).show()
         }
+    }
+
+    // 4. Сохранение: показываем итог установки напоминания и закрываем экран
+    val finishSave = {
+        viewModel.save { message ->
+            if (message != null) Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            onDone()
+        }
+    }
+    // С Android 13 для показа уведомлений нужно разрешение. Просим его перед сохранением.
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (!granted) {
+            Toast.makeText(context, "Уведомления отключены: напоминание не будет показано", Toast.LENGTH_LONG).show()
+        }
+        finishSave()
     }
 
     LaunchedEffect(Unit) {
@@ -196,8 +217,46 @@ fun EditProfileScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                     modifier = Modifier.fillMaxWidth(),
                 )
+                val parsedTime = ClassTime.parse(current.classTime)
+                val timeValid = parsedTime != null
+                val showTimeError = classTimeTouched && !timeValid
+                OutlinedTextField(
+                    value = current.classTime,
+                    onValueChange = viewModel::onClassTimeChange,
+                    label = { Text("Время любимой пары") },
+                    singleLine = true,
+                    isError = showTimeError,
+                    supportingText = {
+                        Text(
+                            if (showTimeError) "Введите время в формате ЧЧ:мм, например 09:30"
+                            else "Формат ЧЧ:мм, например 09:30",
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            // Окно с часами. При открытии подставляем уже введённое время
+                            TimePickerDialog(
+                                context,
+                                { _, hour, minute -> viewModel.onClassTimeChange(ClassTime(hour, minute).toString()) },
+                                parsedTime?.hour ?: 9,
+                                parsedTime?.minute ?: 0,
+                                true,
+                            ).show()
+                        }) {
+                            Icon(ClockIcon, contentDescription = "Выбрать время на часах")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Button(
-                    onClick = { viewModel.save(onDone) },
+                    onClick = {
+                        if (context.hasNotificationAccess()) {
+                            finishSave()
+                        } else {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    },
+                    enabled = timeValid,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Готово") }
             }

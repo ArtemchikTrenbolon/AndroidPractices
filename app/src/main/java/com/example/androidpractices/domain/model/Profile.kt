@@ -8,4 +8,6 @@ data class Profile(
     val avatarUri: String? = null,
     /** Ссылка на резюме/портфолио в сети (например, pdf). */
     val resumeUrl: String = "",
+    /** Время любимой пары в формате HH:mm. Пустая строка, пока не задано. */
+    val classTime: String = "",
 )
