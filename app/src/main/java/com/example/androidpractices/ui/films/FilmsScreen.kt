@@ -28,8 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.androidpractices.data.MockFilms
-import com.example.androidpractices.model.Film
 import com.example.androidpractices.ui.common.PosterPlaceholder
 import com.example.androidpractices.ui.theme.AndroidPracticesTheme
 
@@ -72,7 +70,7 @@ fun FilmsScreen(
 }
 
 @Composable
-private fun FilmCard(film: Film, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun FilmCard(film: FilmListItemUi, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(modifier = modifier
         .fillMaxWidth()
         .clickable(onClick = onClick)
@@ -81,7 +79,11 @@ private fun FilmCard(film: Film, onClick: () -> Unit, modifier: Modifier = Modif
             modifier = Modifier.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            PosterPlaceholder(film = film, modifier = Modifier.size(width = 80.dp, height = 112.dp))
+            PosterPlaceholder(
+                seed = film.id,
+                initial = film.posterInitial,
+                modifier = Modifier.size(width = 80.dp, height = 112.dp),
+            )
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -93,18 +95,18 @@ private fun FilmCard(film: Film, onClick: () -> Unit, modifier: Modifier = Modif
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = film.originalTitleRomanised,
+                    text = film.romanisedTitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "${film.releaseYear} • ${film.director}",
+                    text = film.subtitle,
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    text = "★ ${film.rtScore}",
+                    text = film.scoreText,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -117,6 +119,16 @@ private fun FilmCard(film: Film, onClick: () -> Unit, modifier: Modifier = Modif
 @Composable
 private fun FilmCardPreview() {
     AndroidPracticesTheme {
-        FilmCard(film = MockFilms.films.first(), onClick = {})
+        FilmCard(
+            film = FilmListItemUi(
+                id = "castle-in-the-sky",
+                title = "Небесный замок Лапута",
+                romanisedTitle = "Tenkū no Shiro Rapyuta",
+                subtitle = "1986 • Hayao Miyazaki",
+                scoreText = "★ 95",
+                posterInitial = "Н",
+            ),
+            onClick = {},
+        )
     }
 }

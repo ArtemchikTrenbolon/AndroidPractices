@@ -3,7 +3,6 @@ package com.example.androidpractices.ui.films
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidpractices.data.FilmRepository
-import com.example.androidpractices.model.Film
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +10,7 @@ import kotlinx.coroutines.launch
 
 data class FilmsUiState(
     val isLoading: Boolean = true,
-    val films: List<Film> = emptyList(),
+    val films: List<FilmListItemUi> = emptyList(),
 )
 
 class FilmsViewModel : ViewModel() {
@@ -25,7 +24,8 @@ class FilmsViewModel : ViewModel() {
 
     private fun loadFilms() {
         viewModelScope.launch {
-            val films = FilmRepository.getFilms()
+            // Форматирование для экрана делает ViewModel: в UI уходят готовые строки
+            val films = FilmRepository.getFilms().map { it.toListItemUi() }
             _uiState.value = FilmsUiState(isLoading = false, films = films)
         }
     }

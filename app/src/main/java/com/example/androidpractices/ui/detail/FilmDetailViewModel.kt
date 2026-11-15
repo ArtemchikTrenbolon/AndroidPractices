@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidpractices.data.FilmRepository
-import com.example.androidpractices.model.Film
 import com.example.androidpractices.ui.navigation.Routes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +12,7 @@ import kotlinx.coroutines.launch
 
 data class FilmDetailUiState(
     val isLoading: Boolean = true,
-    val film: Film? = null,
+    val film: FilmDetailUi? = null,
 )
 
 /** id фильма приходит из аргумента навигации через SavedStateHandle. */
@@ -26,7 +25,8 @@ class FilmDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            val film = FilmRepository.getFilm(filmId)
+            // Форматирование для экрана делает ViewModel: в UI уходят готовые строки
+            val film = FilmRepository.getFilm(filmId)?.toDetailUi()
             _uiState.value = FilmDetailUiState(isLoading = false, film = film)
         }
     }

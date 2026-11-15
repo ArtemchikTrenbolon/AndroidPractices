@@ -35,8 +35,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.androidpractices.data.MockFilms
-import com.example.androidpractices.model.Film
 import com.example.androidpractices.ui.common.PosterPlaceholder
 import com.example.androidpractices.ui.theme.AndroidPracticesTheme
 
@@ -93,7 +91,7 @@ private fun CenteredBox(modifier: Modifier = Modifier, content: @Composable () -
  * ниже строка с цифрами, таблица «подпись — значение» и описание.
  */
 @Composable
-private fun FilmDetailContent(film: Film, modifier: Modifier = Modifier) {
+private fun FilmDetailContent(film: FilmDetailUi, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -112,7 +110,8 @@ private fun FilmDetailContent(film: Film, modifier: Modifier = Modifier) {
             val headerBottom = createBottomBarrier(poster, rating, margin = 24.dp)
 
             PosterPlaceholder(
-                film = film,
+                seed = film.id,
+                initial = film.posterInitial,
                 modifier = Modifier
                     .size(width = 140.dp, height = 200.dp)
                     .constrainAs(poster) {
@@ -143,7 +142,7 @@ private fun FilmDetailContent(film: Film, modifier: Modifier = Modifier) {
                 },
             )
             Text(
-                text = film.originalTitleRomanised,
+                text = film.romanisedTitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.constrainAs(romanised) {
@@ -162,7 +161,7 @@ private fun FilmDetailContent(film: Film, modifier: Modifier = Modifier) {
                 },
             ) {
                 Text(
-                    text = "★ ${film.rtScore} / 100",
+                    text = film.scoreText,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -178,8 +177,8 @@ private fun FilmDetailContent(film: Film, modifier: Modifier = Modifier) {
                     width = Dimension.fillToConstraints
                 },
             ) {
-                StatItem(label = "Год выхода", value = film.releaseYear.toString())
-                StatItem(label = "Длительность", value = "${film.runningTimeMinutes} мин")
+                StatItem(label = "Год выхода", value = film.yearText)
+                StatItem(label = "Длительность", value = film.durationText)
             }
 
             HorizontalDivider(
@@ -277,6 +276,20 @@ private fun StatItem(label: String, value: String) {
 @Composable
 private fun FilmDetailContentPreview() {
     AndroidPracticesTheme {
-        FilmDetailContent(film = MockFilms.films.first())
+        FilmDetailContent(
+            film = FilmDetailUi(
+                id = "castle-in-the-sky",
+                title = "Небесный замок Лапута",
+                originalTitle = "天空の城ラピュタ",
+                romanisedTitle = "Tenkū no Shiro Rapyuta",
+                description = "Девочка Сита и мальчик Пазу отправляются на поиски летающего острова Лапута.",
+                director = "Hayao Miyazaki",
+                producer = "Isao Takahata",
+                scoreText = "★ 95 / 100",
+                yearText = "1986",
+                durationText = "124 мин",
+                posterInitial = "Н",
+            ),
+        )
     }
 }

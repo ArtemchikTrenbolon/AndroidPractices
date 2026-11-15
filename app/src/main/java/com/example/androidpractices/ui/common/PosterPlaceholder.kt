@@ -30,7 +30,17 @@ private val posterPalettes = listOf(
  */
 @Composable
 fun PosterPlaceholder(film: Film, modifier: Modifier = Modifier) {
-    val colors = posterPalettes[film.id.hashCode().mod(posterPalettes.size)]
+    PosterPlaceholder(
+        seed = film.id,
+        initial = film.title.take(1).uppercase(),
+        modifier = modifier,
+    )
+}
+
+/** seed определяет цвет градиента, initial это буква на постере. UI-модели не зависят от Film. */
+@Composable
+fun PosterPlaceholder(seed: String, initial: String, modifier: Modifier = Modifier) {
+    val colors = posterPalettes[seed.hashCode().mod(posterPalettes.size)]
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -38,7 +48,7 @@ fun PosterPlaceholder(film: Film, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = film.title.take(1).uppercase(),
+            text = initial,
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold,
             color = Color.White,
