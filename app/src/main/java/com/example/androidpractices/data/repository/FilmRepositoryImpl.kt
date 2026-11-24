@@ -2,7 +2,7 @@ package com.example.androidpractices.data.repository
 
 import com.example.androidpractices.data.mapper.toDomain
 import com.example.androidpractices.data.remote.FilmsApi
-import com.example.androidpractices.domain.model.AppException
+import com.example.androidpractices.core.AppException
 import com.example.androidpractices.domain.model.Film
 import com.example.androidpractices.domain.repository.FilmRepository
 import kotlinx.coroutines.CoroutineDispatcher

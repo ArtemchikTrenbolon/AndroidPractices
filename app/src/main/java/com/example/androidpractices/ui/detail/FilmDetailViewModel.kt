@@ -6,7 +6,7 @@ import com.example.androidpractices.domain.model.Film
 import com.example.androidpractices.domain.repository.FavoritesRepository
 import com.example.androidpractices.domain.usecase.GetFilmUseCase
 import com.example.androidpractices.domain.usecase.ToggleFavoriteUseCase
-import com.example.androidpractices.ui.common.toUserMessage
+import com.example.androidpractices.core.ui.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

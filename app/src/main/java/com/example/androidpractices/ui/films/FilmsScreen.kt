@@ -23,9 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.androidpractices.ui.common.ErrorContent
+import com.example.androidpractices.core.ui.ErrorContent
 import com.example.androidpractices.ui.common.FilmCard
-import com.example.androidpractices.ui.common.LoadingContent
+import com.example.androidpractices.core.ui.LoadingContent
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

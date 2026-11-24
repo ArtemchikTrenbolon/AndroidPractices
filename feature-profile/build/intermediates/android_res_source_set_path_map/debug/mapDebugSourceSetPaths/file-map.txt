@@ -1,0 +1,9 @@
+com.example.androidpractices.feature.profile.feature-profile-pngs-0 C:\Dev\AndroidPractices\feature-profile\build\generated\res\pngs\debug
+com.example.androidpractices.feature.profile.feature-profile-updated_navigation_xml-1 C:\Dev\AndroidPractices\feature-profile\build\generated\updated_navigation_xml\debug
+com.example.androidpractices.feature.profile.feature-profile-mergeDebugResources-2 C:\Dev\AndroidPractices\feature-profile\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
+com.example.androidpractices.feature.profile.feature-profile-mergeDebugResources-3 C:\Dev\AndroidPractices\feature-profile\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
+com.example.androidpractices.feature.profile.feature-profile-debug-4 C:\Dev\AndroidPractices\feature-profile\build\intermediates\merged_res\debug\mergeDebugResources
+com.example.androidpractices.feature.profile.feature-profile-debug-5 C:\Dev\AndroidPractices\feature-profile\build\intermediates\packaged_res\debug\packageDebugResources
+com.example.androidpractices.feature.profile.feature-profile-debug-6 C:\Dev\AndroidPractices\feature-profile\src\debug\res
+com.example.androidpractices.feature.profile.feature-profile-main-7 C:\Dev\AndroidPractices\feature-profile\src\main\res
+gradleHome-0 C:\Users\artem\.gradle

@@ -25,8 +25,8 @@ import com.example.androidpractices.ui.detail.FilmDetailScreen
 import com.example.androidpractices.ui.films.FilmsScreen
 import com.example.androidpractices.ui.navigation.BottomTab
 import com.example.androidpractices.ui.navigation.Routes
-import com.example.androidpractices.ui.profile.EditProfileScreen
-import com.example.androidpractices.ui.profile.ProfileScreen
+import com.example.androidpractices.feature.profile.ui.EditProfileScreen
+import com.example.androidpractices.feature.profile.ui.ProfileScreen
 
 @Composable
 fun MainScreen() {

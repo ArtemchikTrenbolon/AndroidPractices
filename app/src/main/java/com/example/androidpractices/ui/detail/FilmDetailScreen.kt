@@ -36,9 +36,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import com.example.androidpractices.domain.model.Film
-import com.example.androidpractices.ui.common.ErrorContent
+import com.example.androidpractices.core.ui.ErrorContent
 import com.example.androidpractices.ui.common.FilmPoster
-import com.example.androidpractices.ui.common.LoadingContent
+import com.example.androidpractices.core.ui.LoadingContent
 import com.example.androidpractices.ui.preview.SampleFilms
 import com.example.androidpractices.ui.theme.AndroidPracticesTheme
 

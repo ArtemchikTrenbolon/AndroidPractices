@@ -1,0 +1,2 @@
+com.example.androidpractices.feature.profile
+xml file_paths
